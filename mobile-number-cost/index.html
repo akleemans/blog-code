@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mobile number cost</title>
+    <meta name="description" content="Mobile number cost">
+    <meta name="author" content="Adrianus Kleemans">
+</head>
+
+<body>
+<div ng-app="PhoneNumberApp" ng-controller="PhoneNumberCtrl as phoneNumberCtrl"
+     style="font-size: 24px; border: 1px solid #ccc; border-radius: 16px; padding: 15px;">
+    <div>Phone number:
+        <select ng-model="phoneNumberCtrl.prefix" style="font-size: 22px;">
+            <option value="079">079</option>
+            <option value="075">075</option>
+        </select>
+        <input type="text" ng-model="phoneNumberCtrl.nr" ng-change="phoneNumberCtrl.calculate()" style="font-size: 22px; width: 100px; height: 24px;">
+    </div>
+    <div style="margin-top: 5px;">
+        Cost:
+        <input type="text" ng-model="phoneNumberCtrl.cost" readonly
+               style="font-size: 22px; font-weight: bold; border: 1px solid #fff; width: 300px; ">
+    </div>
+    <div>
+        Category:
+        <input type="text" ng-model="phoneNumberCtrl.category" readonly
+               style="font-size: 22px; font-weight: bold; width: 300px; border: 1px solid #fff; margin-top: 5px;">
+    </div>
+    <div style="font-size: 18px;">
+        Subcategory:
+        <input type="text" ng-model="phoneNumberCtrl.subcategory" readonly
+               style="font-size: 14px; width: 300px; border: 1px solid #fff;">
+    </div>
+</div>
+<script src="../../lib/angular.js"></script>
+<script src="mobile-number-cost.js"></script>
+</body>
+</html>

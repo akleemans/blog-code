@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Ship cost calculator</title>
+    <meta name="author" content="Adrianus Kleemans">
+</head>
+
+<body>
+<div ng-app="ShipCostApp" ng-controller="ShipCostCtrl as shipCostCtrl"
+     style="font-size: 24px; border: 1px solid #ccc; border-radius: 16px; padding: 15px;">
+    <div>
+        Inventory slots:
+        <input type="number" ng-model="shipCostCtrl.slots" ng-change="shipCostCtrl.calculateCost()"
+               style="font-size: 22px; border: 1px solid #000;" min="1" max="99">
+    </div>
+    <div>
+        Average price:
+        <input type="text" ng-model="shipCostCtrl.price" readonly style="font-size: 22px; width: 200px;">
+    </div>
+    <div>
+        Estimated gold mining time:
+        <input type="text" ng-model="shipCostCtrl.hours" readonly style="font-size: 22px; width: 200px;">
+    </div>
+</div>
+<script src="../../lib/angular.js"></script>
+<script src="ship-cost-calculator.js"></script>
+</body>
+</html>

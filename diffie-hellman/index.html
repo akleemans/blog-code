@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Diffie-Hellman key exchange</title>
+    <meta name="description" content="Diffie-Hellman key exchange">
+    <meta name="author" content="Adrianus Kleemans">
+</head>
+<body>
+<div id="app" ng-app="DiffieHellmanApp" ng-controller="DiffieHellmanCtrl as ctrl"
+     style="border: 1px solid #ccc; border-radius: 16px;padding:  15px;">
+    <h2>Step 0: Who are you?</h2>
+    <p>Who are you?</p>
+    <input type="radio" id="person-a" name="person" value="Alice" ng-model="ctrl.me">
+    <label for="person-a"> I am Alice</label>
+    <input type="radio" id="person-b" name="person" value="Bob" ng-model="ctrl.me">
+    <label for="person-b"> I am Bob</label>
+    <p>You are: {{ctrl.me}}</p>
+    <h2>Step 1: Alice generates p, g, b and calculates A</h2>
+    <div ng-if="ctrl.me === 'Alice'">
+        <button ng-click="ctrl.prepareAlice()" type="button" class="btn btn-outline-primary">Generate!</button>
+        <ul>
+            <li>p: {{ctrl._p}}</li>
+            <li>g: {{ctrl._g}}</li>
+            <li>A: {{ctrl.A}}</li>
+            <li>Secret a: {{ctrl._a}} (do not share this!)</li>
+        </ul>
+    </div>
+    <div ng-if="ctrl.me === 'Bob'">
+        <p>Alice is generating primes and her secret number. Nothing to do for Bob here, please continue to next
+            step.</p>
+    </div>
+    <h2>Step 2: First exchange</h2>
+    <div ng-if="ctrl.me === 'Alice'">
+        <p>Please share <b>p = {{ctrl._p}}, g = {{ctrl._g}} and A = {{ctrl.A}}</b> with your friend Bob and wait for his
+            response.</p>
+    </div>
+    <div ng-if="ctrl.me === 'Bob'">
+        <p>Wait for Alice to send you p, g and A and enter them here:</p>
+        <label for="bob-p">Enter p: </label><input type="number" id="bob-p" value="small" ng-model="ctrl._p"><br>
+        <label for="bob-g">Enter g: </label><input type="number" id="bob-g" value="small" ng-model="ctrl._g"><br>
+        <label for="bob-A">Enter A: </label><input type="number" id="bob-A" value="small" ng-model="ctrl.A"><br>
+    </div>
+    <h2>Step 3: Bob generates b & calculates B</h2>
+    <div ng-if="ctrl.me === 'Alice'">
+        <p>Bob is generating his secret number. Nothing to do for Alice here, please continue to next step.</p>
+    </div>
+    <div ng-if="ctrl.me === 'Bob'">
+        <button ng-click="ctrl.prepareBob()" type="button" class="btn btn-outline-primary">Generate Bob's secret b!
+        </button>
+        <ul>
+            <li>B: {{ctrl.B}}</li>
+            <li>Secret b: {{ctrl._b}} (do not share this!)</li>
+        </ul>
+    </div>
+    <h2>Step 4: Second exchange</h2>
+    <div ng-if="ctrl.me === 'Alice'">
+        <p>Please enter <b>B</b> you get from Bob:</p>
+        <input ng-model="ctrl.B">
+    </div>
+    <div ng-if="ctrl.me === 'Bob'">
+        <p>Please share your calculated <b>B = {{ctrl.B}}</b> with Alice.</p>
+    </div>
+    <h2>Final step 5: Calculation of the key</h2>
+    <div ng-if="ctrl.me === 'Alice'">
+        <p>As Alice, we can now compute the key as follows:</p>
+        <pre> B^a mod p = K </pre>
+        {{ctrl.B}}^{{ctrl._a}} mod {{ctrl._p}} = <b>{{ctrl.K}}</b>
+    </div>
+    <div ng-if="ctrl.me === 'Bob'">
+        <p>As Bob, we can now compute the key as follows:</p>
+        <pre> A^b mod p = K </pre>
+        {{ctrl.A}}^{{ctrl._b}} mod {{ctrl._p}} = <b>{{ctrl.K}}</b>
+    </div>
+    <button ng-click="ctrl.calculateKey()" type="button" class="btn btn-outline-primary">Calculate!</button>
+    <p>The key K should now be the same for both Alice and Bob.</p>
+    <h2>Exchange "secured" messages</h2>
+    <p>You can now exchange messages with your new key K!</p>
+    <p>
+        Try for example this simple XOR encryption (not secure, but still unreadable), enter a message, transmit it:
+    </p>
+    <textarea ng-model="ctrl.message"></textarea><br>
+    <button ng-click="ctrl.encryptWithXORtoHex()" type="button" class="btn btn-outline-primary">Encrypt</button>
+    <button ng-click="ctrl.decrypt()" type="button" class="btn btn-outline-primary">Decrypt</button>
+    <div>Result: {{ctrl.encrypted}}</div>
+</div>
+<script src="../../lib/angular.js"></script>
+<script src="diffie-hellman.js"></script>
+</body>
+</html>

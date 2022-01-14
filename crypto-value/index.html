@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Crypto value calculation</title>
+    <meta name="description" content="Crypto value calculation">
+    <meta name="author" content="Adrianus Kleemans">
+</head>
+
+<body>
+<style>
+    .red-text {
+        color: red;
+    }
+
+    .green-text {
+        color: green;
+    }
+</style>
+<div ng-app="CryptoValueApp" ng-controller="CryptoValueCtrl as cryptoValueCtrl">
+    <h2>Crypto</h2>
+    <p>List of crypto and their market values:</p>
+
+    <table class="table table-hover table-sm">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Short</th>
+            <th scope="col">Name</th>
+            <th scope="col">Balance</th>
+            <th scope="col">Value</th>
+            <th scope="col">Rate</th>
+            <th scope="col">Difference</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="currency in cryptoValueCtrl.balances"> <!-- | filter: hasBalance"> -->
+            <th scope="row">{{ $index }}</th>
+            <td>{{ currency.short }}</td>
+            <td>{{ currency.name }}</td>
+            <td>{{ currency.balance }}</td>
+            <td>{{ cryptoValueCtrl.getValue(currency) | number: 2 }} €</td>
+            <td>{{ cryptoValueCtrl.getRate(currency.short) | number: 4 }} € / {{ currency.short }}</td>
+            <td>
+                <span ng-class="{'red-text': cryptoValueCtrl.getDifference(currency) < 0.0, 'green-text': cryptoValueCtrl.getDifference(currency) >= 0.0 }"> {{ cryptoValueCtrl.getDifference(currency) }} % </span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <b>Total: {{ cryptoValueCtrl.getTotal() | number: 2 }} €</b>
+</div>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+      integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+<script src="../../lib/angular.js"></script>
+<script src="crypto-value.js"></script>
+</body>
+</html>

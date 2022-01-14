@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Unix timestamp</title>
+    <meta name="description" content="Unix timestamp comparison">
+    <meta name="author" content="Adrianus Kleemans">
+</head>
+<style>
+    .box {
+        font-size: 32px;
+        width: 48%;
+        text-align: center;
+        float: left;
+    }
+
+    .current-time {
+        font-size: 26px;
+        clear: both;
+        text-align: center;
+        margin-top: 90px;
+        margin-bottom: 20px;
+    }
+</style>
+<body>
+
+<div ng-app="UnixTimestampApp" ng-controller="UnixTimestampCtrl as unixTimestampCtrl"
+     style="border: 1px solid black; border-radius: 10px; border-top: 20px;">
+    <div class="box">{{ unixTimestampCtrl.unixTimestamp }}<br>Unix timestamp</div>
+    <div class="box">{{ unixTimestampCtrl.secondsSinceEpoch }}<br>Seconds since epoch</div>
+    <br>
+    <div class="current-time">
+        Current difference: <b>{{ unixTimestampCtrl.diffSeconds}}s</b> <br>
+        Current UTC time: <br> {{ unixTimestampCtrl.currentTime}}
+    </div>
+</div>
+<link rel="stylesheet" href="lib/bootstrap.css">
+<script src="../../lib/angular.js"></script>
+<script src="unix-timestamp.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Swiss Song charts</title>
+    <meta name="description" content="Swiss song charts">
+    <meta name="author" content="Adrianus Kleemans">
+</head>
+
+<body>
+
+<div ng-app="ChartsApp" ng-controller="ChartsCtrl as chartsCtrl"
+     style="font-size: 16px; border: 1px solid #ccc; border-radius: 16px; padding: 10px;">
+    <h2 style="margin-top: 5px;">All-time charts</h2>
+    <div style="margin-bottom: 10px;">
+        Search: <input type="text" ng-model="chartsCtrl.query" style="font-size: 18px; width: 200px; height: 24px;"></div>
+    <div ng-repeat="entry in chartsCtrl.data | filter: chartsCtrl.query | limitTo: 50" style="padding: 5px">{{entry[0]}}. <b>{{entry[1]}}</b>
+        ({{entry[3]}}) - {{entry[2]}} points
+    </div>
+</div>
+<script src="../../lib/angular.js"></script>
+<script src="swiss-song-charts.js"></script>
+</body>
+</html>

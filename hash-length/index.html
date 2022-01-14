@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Hash length calculation</title>
+    <meta name="description" content="Hash length calculation">
+    <meta name="author" content="Adrianus Kleemans">
+</head>
+
+<body>
+<div ng-app="HashLengthApp" ng-controller="HashLengthCtrl as hashLengthCtrl"
+     style="font-size: 24px; border: 1px solid #ccc; border-radius: 16px; padding: 15px;">
+    <div>Expected tries:
+        <input type="number" min="2" ng-model="hashLengthCtrl.k" ng-change="hashLengthCtrl.calculate()"
+               style="font-size: 22px; width: 100px;">
+    </div>
+    <div>
+        Max. collision probability (in %):
+        <input type="number" step="any" ng-model="hashLengthCtrl.p" min="1" max="99"
+               ng-change="hashLengthCtrl.calculate()" style="font-size: 22px; width: 100px;">
+    </div>
+    <div style="margin-top: 10px;">
+        Min. space of possible values:
+        <input type="text" ng-model="hashLengthCtrl.n" readonly
+               style="font-size: 22px; font-weight: bold; border: 1px solid #fff; width: 300px; ">
+    </div>
+    <div>
+        Example of random hash:
+        <input type="text" ng-model="hashLengthCtrl. hash" readonly
+               style="font-size: 22px; font-weight: bold; font-family: monospace; width: 300px; border: 1px solid #fff;">
+    </div>
+    <div style="font-size: 12px;"> (better collision probability approx.: {{hashLengthCtrl.prob}})</div>
+</div>
+<script src="../../lib/angular.js"></script>
+<script src="hash-length.js"></script>
+</body>
+</html>

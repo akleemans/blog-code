@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Word clock</title>
+    <meta name="description" content="Word clock">
+    <meta name="author" content="Adrianus Kleemans">
+    <style>
+        .square {
+            font-family: "Lucida Console", Monaco, monospace;
+            font-size: 32px;
+            font-weight: 900;
+            color: #1f2d2d;
+            background-color: black;
+            width: 425px;
+            height: 435px;
+            margin: auto;
+            padding-left: 37px;
+            padding-right: 37px;
+            padding-top: 30px;
+            padding-bottom: 30px;
+
+            border-image: url(https://www.kleemans.ch/static/blog-scripts/src/word-clock/wood.jpg) 30 30 stretch !important;
+            border: 20px solid black;
+        }
+
+        .word-active {
+            color: snow;
+        }
+    </style>
+</head>
+
+<body>
+<div ng-app="WordClockApp" ng-controller="WordClockCtrl as ctrl">
+    <div class="square">
+        <span class="word-active">ES</span>T<span class="word-active">ISCH</span>TJ<span
+            ng-class="{'word-active': ctrl.clock.zaeh}">ZÄH</span>C<span
+            ng-class="{'word-active': ctrl.clock.fuef}">FÜF</span><br>
+        <span ng-class="{'word-active': ctrl.clock.zwaenzg}">ZWÄNZG</span>U<span
+            ng-class="{'word-active': ctrl.clock.viertu}">VIERTU</span>H<span ng-class="{'word-active': ctrl.clock.ab}">AB</span><br>
+        <span ng-class="{'word-active': ctrl.clock.punkt}">PUNKT</span>K<span
+            ng-class="{'word-active': ctrl.clock.vor}">VOR</span>QL<span ng-class="{'word-active': ctrl.clock.haubi}">HAUBI</span><br><span
+            ng-class="{'word-active': ctrl.clock.saechsi}">SÄCHSI</span>IP<span
+            ng-class="{'word-active': ctrl.clock.nueni}">NÜNI</span>S<span ng-class="{'word-active': ctrl.clock.eis}">EIS</span><br>
+        <span ng-class="{'word-active': ctrl.clock.zwoei}">ZWÖI</span>N<span
+            ng-class="{'word-active': ctrl.clock.zaehni}">ZÄHNI</span>AH<span
+            ng-class="{'word-active': ctrl.clock.eufi}">EUFI</span><br>
+        <span ng-class="{'word-active': ctrl.clock.drue}">DRÜ</span>B<span
+            ng-class="{'word-active': ctrl.clock.zwoeufi}">ZWÖUFI</span>F<span
+            ng-class="{'word-active': ctrl.clock.sibni}">SIBNI</span><br>
+        <span ng-class="{'word-active': ctrl.clock.achti}">ACHTI</span>X<span
+            ng-class="{'word-active': ctrl.clock.fuefi}">FÜFI</span>R<span ng-class="{'word-active': ctrl.clock.vieri}">VIERI</span>
+    </div>
+</div>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+      integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+<script src="../../lib/angular.js"></script>
+<script src="word-clock.js"></script>
+</body>
+</html>
