@@ -11,6 +11,26 @@ describe('Chess engine', () => {
   });
    */
 
+  describe('chess.js assumptions', () => {
+    it('should load fen fast', () => {
+      let midGameFen = 'rn1Q1k1r/pp2R2b/5p2/7p/2B5/2N2P1q/PP6/3KR3 b - - 2 24';
+      let game = Chess();
+
+      // Time fen() methods
+      let start = Date.now();
+      for (let i = 0; i < 500; i++) {
+        let initialFen = game.fen();
+        game.load(midGameFen)
+        let fen2 = game.fen();
+        game.load(initialFen)
+      }
+      const fenTime = (Date.now() - start) / 1000;
+      // console.log('fenTime:', fenTime);
+
+      expect(fenTime).toBeLessThan(1);
+    });
+  });
+
   describe('Helper methods', () => {
     it('should calculate sum', () => {
       expect(sum(1, 2)).toEqual(3);
@@ -134,4 +154,31 @@ describe('Chess engine', () => {
     });
   });
 
+  describe('Center control evaluation', () => {
+    it('should evaluate center control for initial game', () => {
+      game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      expect(evaluateCenter(game, getPieces(game))).toBeCloseTo(0);
+    });
+
+    it('should see white as more in control in mid-game', () => {
+      game.load('r1b1kbnr/1pP2pp1/1p1p4/n3Pq1p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 0 17');
+      expect(evaluateCenter(game, getPieces(game))).toBeLessThan(0);
+    });
+
+    it('should see white dominating the center', () => {
+      game.load('r1b1kbnr/1pPq1pp1/1p1P4/n6p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 1 18');
+      // console.log('score:', evaluateCenter(game, getPieces(game)));
+      expect(evaluateCenter(game, getPieces(game))).toBeLessThan(0);
+    });
+
+    it('should give less weight for endgame', () => {
+      game.load('8/p2p4/4p1k1/1p6/4n1K1/8/8/8 w - - 0 48');
+      expect(evaluateCenter(game, getPieces(game))).toBeCloseTo(0);
+    });
+
+    it('should recognize white in center', () => {
+      game.load('r1b2knr/pppp2pp/2n5/2b2B2/4PP2/2PP4/PP5P/RNBQqKNR w - - 3 10');
+      expect(evaluateCenter(game, getPieces(game))).toBeLessThan(- 3 * centerWeighting);
+    });
+  });
 });

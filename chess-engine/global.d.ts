@@ -76,7 +76,7 @@ declare class Chess {
 
   reset(): void;
 
-  moves(options?: MovesOptions): Move[]; // Move[] | string[]
+  moves(options?: MovesOptions): (Move | string)[];
 
   in_check(): boolean;
 
