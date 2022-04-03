@@ -1,0 +1,29 @@
+{
+  "name": "blog-scripts",
+  "version": "0.0.1",
+  "description": "Some scripts and smaller projects for my personal blog.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akleemans/blog-scripts.git"
+  },
+  "author": "Adrianus Kleemans",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akleemans/blog-scripts/issues"
+  },
+  "homepage": "https://github.com/akleemans/blog-scripts#readme",
+  "dependencies": {
+    "typescript": "^3.4.5"
+  },
+  "devDependencies": {
+    "@types/angular": "^1.6.54",
+    "tslint": "^5.16.0"
+  }
+}
