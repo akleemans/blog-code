@@ -39,11 +39,11 @@ const getPieces = (game: Chess): ChessPiece[] => {
   return pieces;
 }
 
-const swapTurn = (game: Chess): void => {
+const swapTurn = (game: Chess): Chess => {
   let tokens = game.fen().split(' ');
   tokens[1] = game.turn() === 'b' ? 'w' : 'b';
   tokens[3] = '-';
-  game.load(tokens.join(' '));
+  return new Chess(tokens.join(' '));
 }
 
 /* ---------- Helpers ---------- */
@@ -77,13 +77,25 @@ const evaluateMaterial = (allPieces: ChessPiece[]): number => {
   return score;
 };
 
-const evaluateMobility = (game: Chess, multiplier: number): number => {
+// Evaluate mobility, but with swapping
+const evaluateMobilityB = (game: Chess, multiplier: number): number => {
   let score = 0;
   score += multiplier * mobilityWeighting * game.moves().length;
   const fen = game.fen();
   swapTurn(game);
   score -= multiplier * mobilityWeighting * game.moves().length;
   game.load(fen);
+  return score;
+};
+
+// Evaluate
+const evaluateMobility = (game: Chess, multiplier: number): number => {
+  let score = multiplier * mobilityWeighting * game.moves().length;
+
+  // @ts-ignore
+  const modifiedGame = swapTurn(game);
+  score -= multiplier * mobilityWeighting * modifiedGame.moves().length;
+
   return score;
 };
 
@@ -235,23 +247,21 @@ const makeMove = (): void => {
 
   log('Board evaluation score before: ' + round(evaluateBoard(game)));
 
-  const searchDepth = 3;
-  const maxQueueSize = 500000;
+  const searchDepth = 2;
   const rootNode = new TreeNode(0, [], null);
   const queue = [rootNode];
-  const fen = game.fen();
 
   // Node Generation
   let start = Date.now();
   let idx = 0;
-  while (idx < queue.length && queue.length <= maxQueueSize) {
+  while (idx < queue.length) {
     let currentNode = queue[idx++];
 
     // Update current board to generate correct following moves
-    game.load(fen);
     for (let m of currentNode.moves) {
       game.move(m);
     }
+    currentNode.score = evaluateBoard(game);
 
     if (currentNode.level < searchDepth) {
       const newNodes = game.moves().map((m: string) =>
@@ -259,21 +269,24 @@ const makeMove = (): void => {
       currentNode.children.push(...newNodes);
       queue.push(...newNodes);
     }
+    for (let m of currentNode.moves) {
+      game.undo();
+    }
   }
-  console.log('Finished generating nodes in ', (Date.now() - start) / 1000, ', queue size:', queue.length);
 
-  start = Date.now();
   // Tree walking
   idx = queue.length - 1;
   while (idx >= 0) {
     let currentNode = queue[idx--];
     // Only update score if leaf node
     if (currentNode.score === undefined) {
-      game.load(fen);
       for (let m of currentNode.moves) {
         game.move(m);
       }
       currentNode.score = evaluateBoard(game);
+      for (let m of currentNode.moves) {
+        game.undo();
+      }
     }
     if (currentNode.parent === null) {
       continue;
@@ -285,7 +298,8 @@ const makeMove = (): void => {
       currentNode.parent.score = currentNode.score;
     }
   }
-  console.log('Walked tree in ', (Date.now() - start) / 1000, ', root node:', rootNode);
+  const t = (Date.now() - start) / 1000;
+  console.log('Visited nodes in ', t, ', queue size:', queue.length, 'nodes per second:', queue.length / t);
 
   const bestMove = rootNode.children.reduce((n0, n1) => {
     if (n0.score === n1.score) {
@@ -293,11 +307,9 @@ const makeMove = (): void => {
     }
     return n0.score > n1.score ? n0 : n1
   }).moves[0];
-  // console.log('Finished walking tree, best move:', bestMove, 'in', (Date.now() - start) / 1000, 's');
-  game.load(fen);
+
   game.move(bestMove);
-  console.log('Board after', bestMove, ':', game.fen());
-  log('Board score after ' + bestMove + ' : ' + round(evaluateBoard(game, true)));
+  console.log('Board after', bestMove, ':', game.fen(), round(evaluateBoard(game, true)));
 
   board.position(game.fen());
 }

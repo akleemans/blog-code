@@ -29,6 +29,28 @@ describe('Chess engine', () => {
 
       expect(fenTime).toBeLessThan(1);
     });
+
+    it('should undo move', () => {
+      let game = Chess();
+
+      let fen1 = game.fen();
+      game.move(game.moves()[0]);
+      game.move(game.moves()[0]);
+      game.undo();
+      game.undo();
+
+      expect(fen1).toEqual(game.fen());
+    });
+
+    it('should provide moves only for one side', () => {
+      let game = Chess();
+
+      const whitePawn = game.moves({square: 'a2'});
+      expect(whitePawn.length).toEqual(2);
+
+      const blackPawn = game.moves({square: 'a7'});
+      expect(blackPawn.length).toEqual(0);
+    });
   });
 
   describe('Helper methods', () => {

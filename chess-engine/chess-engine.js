@@ -33,7 +33,7 @@ var swapTurn = function (game) {
     var tokens = game.fen().split(' ');
     tokens[1] = game.turn() === 'b' ? 'w' : 'b';
     tokens[3] = '-';
-    game.load(tokens.join(' '));
+    return new Chess(tokens.join(' '));
 };
 /* ---------- Helpers ---------- */
 var sum = function (a, b) { return a + b; };
@@ -57,13 +57,22 @@ var evaluateMaterial = function (allPieces) {
     score -= allPieces.filter(function (p) { return p.color === 'w'; }).map(function (p) { return pieceValue[p.type]; }).reduce(sum, 0);
     return score;
 };
-var evaluateMobility = function (game, multiplier) {
+// Evaluate mobility, but with swapping
+var evaluateMobilityB = function (game, multiplier) {
     var score = 0;
     score += multiplier * mobilityWeighting * game.moves().length;
     var fen = game.fen();
     swapTurn(game);
     score -= multiplier * mobilityWeighting * game.moves().length;
     game.load(fen);
+    return score;
+};
+// Evaluate
+var evaluateMobility = function (game, multiplier) {
+    var score = multiplier * mobilityWeighting * game.moves().length;
+    // @ts-ignore
+    var modifiedGame = swapTurn(game);
+    score -= multiplier * mobilityWeighting * modifiedGame.moves().length;
     return score;
 };
 var hasPawns = function (colNr, color, cols) {
@@ -194,11 +203,9 @@ var makeMove = function () {
         return;
     }
     log('Board evaluation score before: ' + round(evaluateBoard(game)));
-    var searchDepth = 3;
-    var maxQueueSize = 500000;
+    var searchDepth = 2;
     var rootNode = new TreeNode(0, [], null);
     var queue = [rootNode];
-    var fen = game.fen();
     // Node Generation
     var start = Date.now();
     var idx = 0;
@@ -206,11 +213,11 @@ var makeMove = function () {
         var _a;
         var currentNode = queue[idx++];
         // Update current board to generate correct following moves
-        game.load(fen);
         for (var _i = 0, _b = currentNode.moves; _i < _b.length; _i++) {
             var m = _b[_i];
             game.move(m);
         }
+        currentNode.score = evaluateBoard(game);
         if (currentNode.level < searchDepth) {
             var newNodes = game.moves().map(function (m) {
                 return new TreeNode(currentNode.level + 1, currentNode.moves.concat([m]), currentNode);
@@ -218,24 +225,29 @@ var makeMove = function () {
             (_a = currentNode.children).push.apply(_a, newNodes);
             queue.push.apply(queue, newNodes);
         }
+        for (var _c = 0, _d = currentNode.moves; _c < _d.length; _c++) {
+            var m = _d[_c];
+            game.undo();
+        }
     };
-    while (idx < queue.length && queue.length <= maxQueueSize) {
+    while (idx < queue.length) {
         _loop_2();
     }
-    console.log('Finished generating nodes in ', (Date.now() - start) / 1000, ', queue size:', queue.length);
-    start = Date.now();
     // Tree walking
     idx = queue.length - 1;
     while (idx >= 0) {
         var currentNode = queue[idx--];
         // Only update score if leaf node
         if (currentNode.score === undefined) {
-            game.load(fen);
             for (var _i = 0, _a = currentNode.moves; _i < _a.length; _i++) {
                 var m = _a[_i];
                 game.move(m);
             }
             currentNode.score = evaluateBoard(game);
+            for (var _b = 0, _c = currentNode.moves; _b < _c.length; _b++) {
+                var m = _c[_b];
+                game.undo();
+            }
         }
         if (currentNode.parent === null) {
             continue;
@@ -247,18 +259,16 @@ var makeMove = function () {
             currentNode.parent.score = currentNode.score;
         }
     }
-    console.log('Walked tree in ', (Date.now() - start) / 1000, ', root node:', rootNode);
+    var t = (Date.now() - start) / 1000;
+    console.log('Visited nodes in ', t, ', queue size:', queue.length, 'nodes per second:', queue.length / t);
     var bestMove = rootNode.children.reduce(function (n0, n1) {
         if (n0.score === n1.score) {
             return Math.random() > 0.5 ? n0 : n1;
         }
         return n0.score > n1.score ? n0 : n1;
     }).moves[0];
-    // console.log('Finished walking tree, best move:', bestMove, 'in', (Date.now() - start) / 1000, 's');
-    game.load(fen);
     game.move(bestMove);
-    console.log('Board after', bestMove, ':', game.fen());
-    log('Board score after ' + bestMove + ' : ' + round(evaluateBoard(game, true)));
+    console.log('Board after', bestMove, ':', game.fen(), round(evaluateBoard(game, true)));
     board.position(game.fen());
 };
 /* ---------- Game setup ---------- */
