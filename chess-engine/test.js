@@ -45,11 +45,31 @@ describe('Chess engine', () => {
     it('should provide moves only for one side', () => {
       let game = Chess();
 
-      const whitePawn = game.moves({square: 'a2'});
-      expect(whitePawn.length).toEqual(2);
+      const moves = game.moves();
+      expect(moves.length).toEqual(20);
+    });
 
-      const blackPawn = game.moves({square: 'a7'});
-      expect(blackPawn.length).toEqual(0);
+    it('should provide correct amount of moves', () => {
+      let game = Chess('rn1Q1k1r/pp2R2b/5p2/7p/2B5/2N2P1q/PP6/3KR3 b - - 2 24');
+      expect(game.moves().length).toEqual(0);
+
+      game.load('4k3/4P3/4K3/8/8/8/8/8 b - - 0 78');
+      expect(game.moves().length).toEqual(0);
+
+      game.load(
+          'rnbqkbnr/ppp5/3ppp1p/6P1/2BPP3/6P1/PPP4P/RNBQK1NR b KQkq - 0 6');
+      expect(game.moves().length).toEqual(25);
+
+      game.load(
+          'rnb1kbnr/pppp1ppp/1q6/4P3/4P3/6P1/PPPP3P/RNBQKBNR b KQkq - 0 5');
+      expect(game.moves().length).toEqual(41);
+
+      game.load('8/3p4/4p3/K7/5k2/1pn5/8/8 w - - 0 54');
+      expect(game.moves().length).toEqual(3);
+
+      game.load(
+          'r1b1k1nr/1pppbppp/1p6/n3Pq2/2PP4/P1N2NP1/4B2P/R1BQK2R w KQkq - 0 14');
+      expect(game.moves().length).toEqual(38);
     });
   });
 
@@ -121,6 +141,20 @@ describe('Chess engine', () => {
       const scoreAfter = evaluateMaterial(getPieces(game))
       expect(scoreAfter - scoreBefore).toBeCloseTo(9.35);
     });
+
+    it('should evaluate material fast', () => {
+      game.load(
+          'rnbqkbnr/ppp5/3ppp1p/6P1/2BPP3/6P1/PPP4P/RNBQK1NR b KQkq - 0 6')
+
+      let start = Date.now();
+      for (let i = 0; i < 1000; i++) {
+        const score = evaluateMaterial(getPieces(game));
+        expect(score).toBeCloseTo(-1);
+      }
+      const evaluationTime = (Date.now() - start) / 1000;
+      console.log('Material evaluation:', evaluationTime);
+      expect(evaluationTime).toBeLessThan(0.05);
+    });
   });
 
   describe('Mobility evaluation', () => {
@@ -139,6 +173,20 @@ describe('Chess engine', () => {
     it('should calculate mobility for initial game', () => {
       game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
       expect(evaluateMobility(game, -1)).toBeCloseTo(0);
+    });
+
+    it('should evaluate mobility "somewhat" fast', () => {
+      game.load(
+          'rnbqkbnr/ppp5/3ppp1p/6P1/2BPP3/6P1/PPP4P/RNBQK1NR b KQkq - 0 6')
+
+      let start = Date.now();
+      for (let i = 0; i < 1000; i++) {
+        const score = evaluateMobility(game, -1);
+        expect(score).toBeCloseTo(0.75);
+      }
+      const evaluationTime = (Date.now() - start) / 1000;
+      console.log('Mobility evaluation:', evaluationTime);
+      expect(evaluationTime).toBeLessThan(5);
     });
   });
 
@@ -174,6 +222,20 @@ describe('Chess engine', () => {
           'r1b1kbnr/1pP2pp1/1p1p4/n3Pq1p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 0 17');
       expect(evaluatePawns(game)).toBeCloseTo(pawnWeighting);
     });
+
+    it('should evaluate pawn structure fast', () => {
+      game.load(
+          'r1b1kbnr/1pP2pp1/1p1p4/n3Pq1p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 0 17')
+
+      let start = Date.now();
+      for (let i = 0; i < 1000; i++) {
+        const score = evaluatePawns(game);
+        expect(score).toBeCloseTo(pawnWeighting);
+      }
+      const evaluationTime = (Date.now() - start) / 1000;
+      console.log('Pawn structure evaluation:', evaluationTime);
+      expect(evaluationTime).toBeLessThan(0.05);
+    });
   });
 
   describe('Center control evaluation', () => {
@@ -183,12 +245,14 @@ describe('Chess engine', () => {
     });
 
     it('should see white as more in control in mid-game', () => {
-      game.load('r1b1kbnr/1pP2pp1/1p1p4/n3Pq1p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 0 17');
+      game.load(
+          'r1b1kbnr/1pP2pp1/1p1p4/n3Pq1p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 0 17');
       expect(evaluateCenter(game, getPieces(game))).toBeLessThan(0);
     });
 
     it('should see white dominating the center', () => {
-      game.load('r1b1kbnr/1pPq1pp1/1p1P4/n6p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 1 18');
+      game.load(
+          'r1b1kbnr/1pPq1pp1/1p1P4/n6p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 1 18');
       // console.log('score:', evaluateCenter(game, getPieces(game)));
       expect(evaluateCenter(game, getPieces(game))).toBeLessThan(0);
     });
@@ -200,7 +264,21 @@ describe('Chess engine', () => {
 
     it('should recognize white in center', () => {
       game.load('r1b2knr/pppp2pp/2n5/2b2B2/4PP2/2PP4/PP5P/RNBQqKNR w - - 3 10');
-      expect(evaluateCenter(game, getPieces(game))).toBeLessThan(- 3 * centerWeighting);
+      expect(evaluateCenter(game, getPieces(game))).toBeLessThan(
+          -3 * centerWeighting);
+    });
+
+    it('should evaluate pawn structure fast', () => {
+      game.load('r1b2knr/pppp2pp/2n5/2b2B2/4PP2/2PP4/PP5P/RNBQqKNR w - - 3 10')
+
+      let start = Date.now();
+      for (let i = 0; i < 1000; i++) {
+        const score = evaluateCenter(game, getPieces(game));
+        expect(score).toBeLessThan(-3 * centerWeighting);
+      }
+      const evaluationTime = (Date.now() - start) / 1000;
+      console.log('Center control evaluation:', evaluationTime);
+      expect(evaluationTime).toBeLessThan(0.05);
     });
   });
 });
