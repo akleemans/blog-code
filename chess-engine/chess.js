@@ -1365,12 +1365,22 @@ var Chess = function (fen) {
       return reset()
     },
 
+    /* CUSTOM CODE START */
+    make_pretty: function (ugly_move) {
+      return make_pretty(ugly_move);
+    },
+    /* CUSTOM CODE FINISH */
+
     moves: function (options) {
       /* The internal representation of a chess move is in 0x88 format, and
        * not meant to be human-readable.  The code below converts the 0x88
        * square coordinates to algebraic coordinates.  It also prunes an
        * unnecessary move keys resulting from a verbose call.
        */
+
+      /* CUSTOM CODE START { legal: true } */
+      return generate_moves();
+      /* CUSTOM CODE FINISH */
 
       var ugly_moves = generate_moves(options)
       var moves = []
@@ -1818,6 +1828,12 @@ var Chess = function (fen) {
     },
 
     move: function (move, options) {
+      /* CUSTOM CODE START */
+      if (typeof move === 'object' && typeof move.from === 'number') {
+        move = make_pretty(move).san;
+      }
+      /* CUSTOM CODE FINISH */
+
       /* The move function can be called with in the following parameters:
        *
        * .move('Nxb7')      <- where 'move' is a case-sensitive SAN string
