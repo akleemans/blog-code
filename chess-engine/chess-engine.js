@@ -8,13 +8,12 @@ var pieceValue = {
     'k': 1
 };
 var colorBonusMap = { 'w': -1, 'b': 1 };
-var colorPenaltyMap = { 'w': 1, 'b': -1 };
 // Evaluation factors
 var mobilityWeighting = 0.05;
 var pawnWeighting = 0.5;
-var centerWeighting = 0.25;
-var extendedCenterSquares = [];
-['c', 'd', 'e', 'f'].forEach(function (a) { return [3, 4, 5, 6].forEach(function (b) { return extendedCenterSquares.push(a + b); }); });
+var centerWeighting = 0.2;
+var center = [51, 53, 67, 68];
+var extendedCenter = [34, 35, 36, 37, 50, 51, 52, 53, 66, 67, 68, 69, 82, 83, 84, 85];
 /* ---------- Board helpers ---------- */
 var getPieces = function (game) {
     var pieces = [];
@@ -52,25 +51,11 @@ var TreeNode = /** @class */ (function () {
 }());
 /* ---------- Evaluation methods ---------- */
 var evaluateMaterial = function (allPieces) {
-    var score = 0;
-    score += allPieces.filter(function (p) { return p.color === 'b'; }).map(function (p) { return pieceValue[p.type]; }).reduce(sum, 0);
-    score -= allPieces.filter(function (p) { return p.color === 'w'; }).map(function (p) { return pieceValue[p.type]; }).reduce(sum, 0);
-    return score;
-};
-// Evaluate mobility, but with swapping
-var evaluateMobilityB = function (game, multiplier) {
-    var score = 0;
-    score += multiplier * mobilityWeighting * game.moves().length;
-    var fen = game.fen();
-    swapTurn(game);
-    score -= multiplier * mobilityWeighting * game.moves().length;
-    game.load(fen);
-    return score;
+    return allPieces.filter(function (p) { return p; }).map(function (p) { return pieceValue[p.type] * colorBonusMap[p.color]; }).reduce(sum);
 };
 // Evaluate
 var evaluateMobility = function (game, multiplier) {
     var score = multiplier * mobilityWeighting * game.moves().length;
-    // @ts-ignore
     var modifiedGame = swapTurn(game);
     score -= multiplier * mobilityWeighting * modifiedGame.moves().length;
     return score;
@@ -102,67 +87,35 @@ var evaluatePawns = function (game) {
     }
     return pawnScore * pawnWeighting;
 };
-// Check occupancy of extended center
-var evaluateCenter = function (game, allPieces) {
-    // const centerSquares = ['d5', 'e5', 'd4', 'e4'];
-    // Center control is more important in early and mid-game
-    var openingWeighting = Math.max((allPieces.length - 8) / 24, 0);
-    // console.log('centerWeighting with', allPieces.length, 'is:', centerWeighting);
-    // Calculate control with per square reciprocal piece value of attacker
+var calculateCenterScore = function (moves) {
     var score = 0;
-    for (var _i = 0, _a = ['c', 'd', 'e', 'f']; _i < _a.length; _i++) {
-        var a = _a[_i];
-        for (var _b = 0, _c = [3, 4, 5, 6]; _b < _c.length; _b++) {
-            var b = _c[_b];
-            var square = a + b;
-            var piece = game.get(square);
-            if (piece !== null) {
-                score += (1 / pieceValue[piece.type]) * colorBonusMap[piece.color];
-            }
+    for (var _i = 0, moves_1 = moves; _i < moves_1.length; _i++) {
+        var move = moves_1[_i];
+        var multiplier = 0;
+        if (center.indexOf(move.to) !== -1) {
+            multiplier = 2;
         }
+        else if (extendedCenter.indexOf(move.to) !== -1) {
+            multiplier = 1;
+        }
+        // console.log('move: ', move, 'multiplier:', multiplier, 'pieceValue[move.piece]:', pieceValue[move.piece], 'colorBonusMap[move.color]', colorBonusMap[move.color]);
+        score += multiplier * (1 / pieceValue[move.piece]) * colorBonusMap[move.color];
     }
-    return score * openingWeighting * centerWeighting;
+    return score;
 };
-// Check possible moves in center
-var evaluateCenterC = function (game, allPieces) {
+var evaluateCenter = function (game, nrOfPieces) {
     // Center control is more important in early and mid-game
-    var openingWeighting = Math.max((allPieces.length - 8) / 24, 0);
-    var score = game.moves({ verbose: true }).filter(function (m) { return extendedCenterSquares.indexOf(m.to) !== -1; }).map(function (m) { return (1 / pieceValue[m.piece]) * colorBonusMap[m.color]; }).reduce(sum, 0);
-    return score * openingWeighting * centerWeighting;
-};
-// Check control via
-var evaluateCenterB = function (game, allPieces) {
-    var centerSquares = ['d5', 'e5', 'd4', 'e4'];
-    var score = 0;
-    // Center control is more important in early and mid-game
-    var openingWeighting = Math.max((allPieces.length - 8) / 24, 0);
-    var fen = game.fen();
-    var movesToCenter = game.moves({ verbose: true }).filter(function (m) { return centerSquares.indexOf(m.to) !== -1; });
-    swapTurn(game);
-    movesToCenter.push.apply(movesToCenter, game.moves({ verbose: true }).filter(function (m) { return centerSquares.indexOf(m.to) !== -1; }));
-    game.load(fen);
-    var _loop_1 = function (square) {
-        var squareScore = 0;
-        var attackerScore = movesToCenter.filter(function (m) { return m.to === square; }).map(function (m) { return (1 / pieceValue[m.piece]) * colorBonusMap[m.color]; }).reduce(sum, 0);
-        squareScore = attackerScore;
-        /*
-        // Other way: Count by squares
-        if (Math.abs(attackerScore) < 0.01) {
-          squareScore = 0;
-        } else {
-          squareScore = (attackerScore > 0 ? 1 : -1);
-        }*/
-        score += squareScore;
-    };
-    for (var _i = 0, centerSquares_1 = centerSquares; _i < centerSquares_1.length; _i++) {
-        var square = centerSquares_1[_i];
-        _loop_1(square);
-    }
+    var openingWeighting = Math.max((nrOfPieces - 8) / 24, 0);
+    // Calculate control with per square reciprocal piece value of attacker
+    var score = calculateCenterScore(game.moves());
+    // console.log('score:', score);
+    var modifiedGame = swapTurn(game);
+    score += calculateCenterScore(modifiedGame.moves());
     return score * openingWeighting * centerWeighting;
 };
 var evaluateBoard = function (game, print) {
     if (print === void 0) { print = false; }
-    var multiplier = (game.turn() === 'b' ? 1.0 : -1.0);
+    var multiplier = colorBonusMap[game.turn()];
     var allPieces = getPieces(game);
     // 1. Game state
     if (game.game_over()) {
@@ -181,7 +134,7 @@ var evaluateBoard = function (game, print) {
         // 4. Pawn structure: doubled and isolated pawns
         pawns: round(evaluatePawns(game)),
         // 5. Center control, weighted by amount of pieces
-        center: round(evaluateCenter(game, allPieces))
+        center: round(evaluateCenter(game, allPieces.length))
     };
     // TODO 6. King safety
     // const blackKing = allPieces.filter(p => p.type === 'k');
@@ -196,77 +149,74 @@ var log = function (message) {
     console.log(message);
     document.getElementById('state').innerText = message;
 };
+var getSortedMoves = function (game) {
+    // Sort to really make use of minmax
+    return game.moves().sort(function (a, b) {
+        return a.flags - b.flags;
+    });
+};
+var bestMove;
+var searchDepth = 3;
+var positionsEvaluated;
+var max = function (game, depth, alpha, beta) {
+    var moves = getSortedMoves(game);
+    if (depth == 0 || moves.length === 0) {
+        return evaluateBoard(game);
+    }
+    var maxValue = alpha;
+    for (var _i = 0, _a = game.moves(); _i < _a.length; _i++) {
+        var move = _a[_i];
+        positionsEvaluated++;
+        game.move(move);
+        var score = min(game, depth - 1, maxValue, beta);
+        game.undo();
+        if (score > maxValue) {
+            maxValue = score;
+            if (depth === searchDepth) {
+                bestMove = move;
+            }
+            if (maxValue >= beta) {
+                break;
+            }
+        }
+    }
+    return maxValue;
+};
+var min = function (game, depth, alpha, beta) {
+    var moves = getSortedMoves(game);
+    if (depth == 0 || moves.length === 0) {
+        return evaluateBoard(game);
+    }
+    var minValue = beta;
+    for (var _i = 0, _a = game.moves(); _i < _a.length; _i++) {
+        var move = _a[_i];
+        positionsEvaluated++;
+        game.move(move);
+        var score = max(game, depth - 1, alpha, minValue);
+        game.undo();
+        if (score < minValue) {
+            minValue = score;
+            if (minValue <= alpha)
+                break;
+        }
+    }
+    return minValue;
+};
 var makeMove = function () {
-    console.log('Board before move:', game.fen(), 'score:', evaluateBoard(game, true));
+    console.log('Board before move:', game.fen());
     if (game.game_over()) {
         log('Game over!');
         return;
     }
-    log('Board evaluation score before: ' + round(evaluateBoard(game)));
-    var searchDepth = 2;
-    var rootNode = new TreeNode(0, [], null);
-    var queue = [rootNode];
-    // Node Generation
     var start = Date.now();
-    var idx = 0;
-    var _loop_2 = function () {
-        var _a;
-        var currentNode = queue[idx++];
-        // Update current board to generate correct following moves
-        for (var _i = 0, _b = currentNode.moves; _i < _b.length; _i++) {
-            var m = _b[_i];
-            game.move(m);
-        }
-        currentNode.score = evaluateBoard(game);
-        if (currentNode.level < searchDepth) {
-            var newNodes = game.moves().map(function (m) {
-                return new TreeNode(currentNode.level + 1, currentNode.moves.concat([m]), currentNode);
-            });
-            (_a = currentNode.children).push.apply(_a, newNodes);
-            queue.push.apply(queue, newNodes);
-        }
-        for (var _c = 0, _d = currentNode.moves; _c < _d.length; _c++) {
-            var m = _d[_c];
-            game.undo();
-        }
-    };
-    while (idx < queue.length) {
-        _loop_2();
-    }
-    // Tree walking
-    idx = queue.length - 1;
-    while (idx >= 0) {
-        var currentNode = queue[idx--];
-        // Only update score if leaf node
-        if (currentNode.score === undefined) {
-            for (var _i = 0, _a = currentNode.moves; _i < _a.length; _i++) {
-                var m = _a[_i];
-                game.move(m);
-            }
-            currentNode.score = evaluateBoard(game);
-            for (var _b = 0, _c = currentNode.moves; _b < _c.length; _b++) {
-                var m = _c[_b];
-                game.undo();
-            }
-        }
-        if (currentNode.parent === null) {
-            continue;
-        }
-        // Set score of parent
-        if (currentNode.parent.score === undefined ||
-            currentNode.level % 2 === 1 && (currentNode.parent.score < currentNode.score) ||
-            currentNode.level % 2 === 0 && (currentNode.parent.score > currentNode.score)) {
-            currentNode.parent.score = currentNode.score;
-        }
-    }
+    positionsEvaluated = 0;
+    bestMove = undefined;
+    max(game, searchDepth, -Infinity, +Infinity);
     var t = (Date.now() - start) / 1000;
-    console.log('Visited nodes in ', t, ', queue size:', queue.length, 'nodes per second:', queue.length / t);
-    var bestMove = rootNode.children.reduce(function (n0, n1) {
-        if (n0.score === n1.score) {
-            return Math.random() > 0.5 ? n0 : n1;
-        }
-        return n0.score > n1.score ? n0 : n1;
-    }).moves[0];
+    console.log('Visited nodes in ', t, ', positions evaluated:', positionsEvaluated, 'nodes per second:', positionsEvaluated / t);
+    if (bestMove == undefined) {
+        throw new Error('Didnt find any move!');
+    }
     game.move(bestMove);
     console.log('Board after', bestMove, ':', game.fen(), round(evaluateBoard(game, true)));
     board.position(game.fen());
@@ -285,11 +235,10 @@ var onDragStart = function (source, piece, position, orientation) {
     }
 };
 var onDrop = function (source, target) {
-    // see if the move is legal
     var move = game.move({
         from: source,
         to: target,
-        promotion: 'q' // NOTE: always promote to queen
+        promotion: 'q' // always promote to queen
     });
     // illegal move
     if (move === null) {

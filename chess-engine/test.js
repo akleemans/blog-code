@@ -1,15 +1,4 @@
 describe('Chess engine', () => {
-  /*
-  beforeAll(() => {
-    let body = document.getElementsByTagName("body")[0];
-    let board = document.createElement("div");
-    board.id = 'myBoard';
-    body.appendChild(board);
-    let state = document.createElement("div");
-    board.id = 'state';
-    body.appendChild(state);
-  });
-   */
 
   describe('chess.js assumptions', () => {
     it('should load fen fast', () => {
@@ -239,46 +228,47 @@ describe('Chess engine', () => {
   });
 
   describe('Center control evaluation', () => {
+    const nrOfPieces = 32;
+
     it('should evaluate center control for initial game', () => {
       game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-      expect(evaluateCenter(game, getPieces(game))).toBeCloseTo(0);
+      expect(evaluateCenter(game, nrOfPieces)).toBeCloseTo(0);
     });
 
     it('should see white as more in control in mid-game', () => {
       game.load(
           'r1b1kbnr/1pP2pp1/1p1p4/n3Pq1p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 0 17');
-      expect(evaluateCenter(game, getPieces(game))).toBeLessThan(0);
+      expect(evaluateCenter(game, nrOfPieces)).toBeLessThan(0);
     });
 
     it('should see white dominating the center', () => {
       game.load(
           'r1b1kbnr/1pPq1pp1/1p1P4/n6p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 1 18');
       // console.log('score:', evaluateCenter(game, getPieces(game)));
-      expect(evaluateCenter(game, getPieces(game))).toBeLessThan(0);
+      expect(evaluateCenter(game, nrOfPieces)).toBeLessThan(0);
     });
 
     it('should give less weight for endgame', () => {
       game.load('8/p2p4/4p1k1/1p6/4n1K1/8/8/8 w - - 0 48');
-      expect(evaluateCenter(game, getPieces(game))).toBeCloseTo(0);
+      expect(evaluateCenter(game, 8)).toBeCloseTo(0);
     });
 
-    it('should recognize white in center', () => {
-      game.load('r1b2knr/pppp2pp/2n5/2b2B2/4PP2/2PP4/PP5P/RNBQqKNR w - - 3 10');
-      expect(evaluateCenter(game, getPieces(game))).toBeLessThan(
-          -3 * centerWeighting);
+    it('should recognize balanced center situation', () => {
+      game.load('r1b2knr/pppp2pp/2n5/2b2B2/4PP2/2PP4/PP5P/RNB1QKNR b - - 0 10');
+      expect(evaluateCenter(game, nrOfPieces)).toBeLessThan(centerWeighting);
     });
 
-    it('should evaluate pawn structure fast', () => {
-      game.load('r1b2knr/pppp2pp/2n5/2b2B2/4PP2/2PP4/PP5P/RNBQqKNR w - - 3 10')
+    it('should evaluate center control fast', () => {
+      game.load('r1b2knr/pppp2pp/2n5/2b2B2/4PP2/2PP4/PP5P/RNB1QKNR b - - 0 10')
 
       let start = Date.now();
       for (let i = 0; i < 1000; i++) {
-        const score = evaluateCenter(game, getPieces(game));
-        expect(score).toBeLessThan(-3 * centerWeighting);
+        const score = evaluateCenter(game, 32);
+        expect(score).toBeLessThan(centerWeighting);
       }
       const evaluationTime = (Date.now() - start) / 1000;
       console.log('Center control evaluation:', evaluationTime);
-      expect(evaluationTime).toBeLessThan(0.05);
+      expect(evaluationTime).toBeLessThan(0.5);
     });
   });
 });

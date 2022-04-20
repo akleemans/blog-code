@@ -45,6 +45,14 @@ interface Move {
   promotion?: string;
 }
 
+interface RawMove {
+  to: number;
+  from: number;
+  flags?: number;
+  piece?: string;
+  color?: string;
+}
+
 interface ValidationObject {
   error: string;
   valid: boolean;
@@ -76,7 +84,7 @@ declare class Chess {
 
   reset(): void;
 
-  moves(options?: MovesOptions): (Move | string)[];
+  moves(options?: MovesOptions): RawMove[];
 
   in_check(): boolean;
 
@@ -107,7 +115,7 @@ declare class Chess {
 
   turn(): string;
 
-  move(move: string | Move, options?: MoveOptions): Move;
+  move(move: string | Move | RawMove, options?: MoveOptions): Move;
 
   undo(): Move;
 
