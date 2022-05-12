@@ -138,9 +138,13 @@ var evaluateBoard = function (game, print) {
     }
     return totalScore;
 };
-var log = function (message) {
+var log = function () {
+    var message = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        message[_i] = arguments[_i];
+    }
     console.log(message);
-    document.getElementById('state').innerText = message;
+    document.getElementById('state').innerHTML = message.reduce(function (a, b) { return a + '<br>' + b; });
 };
 var getSortedMoves = function (game) {
     // Sort to really make use of minmax
@@ -196,7 +200,7 @@ var min = function (game, depth, alpha, beta) {
     return minValue;
 };
 var makeMove = function () {
-    console.log('Board before move:', game.fen());
+    // console.log('Board before move:', game.fen());
     if (game.game_over()) {
         log('Game over!');
         return;
@@ -206,17 +210,17 @@ var makeMove = function () {
     bestMove = undefined;
     max(game, searchDepth, -Infinity, +Infinity);
     var t = (Date.now() - start) / 1000;
-    console.log('Visited nodes in ', t, ', positions evaluated:', positionsEvaluated, 'nodes per second:', positionsEvaluated / t);
+    log('Visited nodes in ' + t + 's', 'Positions evaluated: ' + positionsEvaluated, 'Nodes per second: ' + Math.round(positionsEvaluated / t), 'Current board score: ' + round(evaluateBoard(game, true)));
     if (bestMove == undefined) {
         throw new Error('Didnt find any move!');
     }
     game.move(bestMove);
-    console.log('Board after', bestMove, ':', game.fen(), round(evaluateBoard(game, true)));
+    // log('Board after '+  bestMove + ': ' + game.fen(), 'Score: ' + round(evaluateBoard(game, true)));
     board.position(game.fen());
 };
 /* ---------- Game setup ---------- */
 var game = new Chess();
-console.log('board:', game.fen());
+log('Engine loaded.');
 var onDragStart = function (source, piece, position, orientation) {
     // do not pick up pieces if the game is over
     if (game.game_over()) {

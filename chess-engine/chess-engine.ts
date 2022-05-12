@@ -170,9 +170,9 @@ const evaluateBoard = (game: Chess, print: boolean = false): number => {
   return totalScore;
 }
 
-const log = (message: string): void => {
+const log = (...message: string[]): void => {
   console.log(message);
-  document.getElementById('state').innerText = message;
+  document.getElementById('state').innerHTML = message.reduce((a, b) => a + '<br>' + b);
 }
 
 const getSortedMoves = (game: Chess): RawMove[] => {
@@ -233,7 +233,7 @@ const min = (game: Chess, depth: number, alpha: number, beta: number): number =>
 }
 
 const makeMove = (): void => {
-  console.log('Board before move:', game.fen());
+  // console.log('Board before move:', game.fen());
   if (game.game_over()) {
     log('Game over!');
     return;
@@ -244,14 +244,16 @@ const makeMove = (): void => {
   bestMove = undefined;
   max(game, searchDepth, -Infinity, +Infinity);
   const t = (Date.now() - start) / 1000;
-  console.log('Visited nodes in ', t, ', positions evaluated:', positionsEvaluated, 'nodes per second:', positionsEvaluated / t);
+  log('Visited nodes in ' + t + 's', 'Positions evaluated: ' + positionsEvaluated,
+    'Nodes per second: ' + Math.round(positionsEvaluated / t),
+    'Current board score: ' + round(evaluateBoard(game, true)));
 
   if (bestMove == undefined) {
     throw new Error('Didnt find any move!');
   }
 
   game.move(bestMove);
-  console.log('Board after', bestMove, ':', game.fen(), round(evaluateBoard(game, true)));
+  // log('Board after '+  bestMove + ': ' + game.fen(), 'Score: ' + round(evaluateBoard(game, true)));
 
   board.position(game.fen());
 }
@@ -259,7 +261,7 @@ const makeMove = (): void => {
 /* ---------- Game setup ---------- */
 
 const game: Chess = new Chess();
-console.log('board:', game.fen());
+log('Engine loaded.');
 
 const onDragStart = (source, piece, position, orientation) => {
   // do not pick up pieces if the game is over
