@@ -3,7 +3,7 @@
 Custom chess engine. UI elements based on
 this [initial UI example](https://chessboardjs.com/examples/5001).
 
-Compile Typescript: `tsc chess.engine.ts`
+Compile Typescript: `tsc chess-engine.ts`
 Run tests: Open `run-tests.html` in browser will let jasmine run the tests.
 
 ## Evaluation
@@ -15,7 +15,6 @@ The following criteria are used for evaluating a position:
 * Mobility: Number of legal moves (* 0.1)
 * Pawn structure: Penalty for doubled or isolated pawns (* 0.5)
 * Center control
-* King safety
 
 ## Idea
 

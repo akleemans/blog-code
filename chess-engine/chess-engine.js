@@ -54,11 +54,8 @@ var evaluateMaterial = function (allPieces) {
     return allPieces.filter(function (p) { return p; }).map(function (p) { return pieceValue[p.type] * colorBonusMap[p.color]; }).reduce(sum);
 };
 // Evaluate
-var evaluateMobility = function (game, multiplier) {
-    var score = multiplier * mobilityWeighting * game.moves().length;
-    var modifiedGame = swapTurn(game);
-    score -= multiplier * mobilityWeighting * modifiedGame.moves().length;
-    return score;
+var evaluateMobility = function (moves, enemyMoves, multiplier) {
+    return multiplier * mobilityWeighting * moves.length - multiplier * mobilityWeighting * enemyMoves.length;
 };
 var hasPawns = function (colNr, color, cols) {
     if (colNr < 0 || colNr > 7) {
@@ -103,14 +100,11 @@ var calculateCenterScore = function (moves) {
     }
     return score;
 };
-var evaluateCenter = function (game, nrOfPieces) {
+var evaluateCenter = function (moves, enemyMoves, nrOfPieces) {
     // Center control is more important in early and mid-game
     var openingWeighting = Math.max((nrOfPieces - 8) / 24, 0);
     // Calculate control with per square reciprocal piece value of attacker
-    var score = calculateCenterScore(game.moves());
-    // console.log('score:', score);
-    var modifiedGame = swapTurn(game);
-    score += calculateCenterScore(modifiedGame.moves());
+    var score = calculateCenterScore(moves) + calculateCenterScore(enemyMoves);
     return score * openingWeighting * centerWeighting;
 };
 var evaluateBoard = function (game, print) {
@@ -126,19 +120,18 @@ var evaluateBoard = function (game, print) {
             return -multiplier * 200;
         }
     }
+    var moves = game.moves();
+    var enemyMoves = swapTurn(game).moves();
     var scores = {
         // 2. Material
         material: round(evaluateMaterial(allPieces)),
         // 3. Mobility (number of legal moves available)
-        mobility: round(evaluateMobility(game, multiplier)),
+        mobility: round(evaluateMobility(moves, enemyMoves, multiplier)),
         // 4. Pawn structure: doubled and isolated pawns
         pawns: round(evaluatePawns(game)),
         // 5. Center control, weighted by amount of pieces
-        center: round(evaluateCenter(game, allPieces.length))
+        center: round(evaluateCenter(moves, enemyMoves, allPieces.length))
     };
-    // TODO 6. King safety
-    // const blackKing = allPieces.filter(p => p.type === 'k');
-    // const whiteKing = allPieces.filter(p => p.type === 'w');
     var totalScore = round(Object.keys(scores).map(function (k, i) { return scores[k]; }).reduce(sum, 0));
     if (print) {
         console.log('Scores:', scores);

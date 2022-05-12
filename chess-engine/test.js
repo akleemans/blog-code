@@ -150,18 +150,21 @@ describe('Chess engine', () => {
     it('should calculate mobility for endgame situation', () => {
       // 19 moves for black, 4 for white. White to move, so multiplier = -1
       game.load('8/p2p4/4p1k1/1p6/4n1K1/8/8/8 w - - 0 48');
-      expect(evaluateMobility(game, -1)).toBeCloseTo(15 * mobilityWeighting);
+      expect(evaluateMobility(game.moves(), swapTurn(game).moves(),
+          -1)).toBeCloseTo(15 * mobilityWeighting);
     });
 
     it('should calculate mobility for late endgame', () => {
       // 16 moves for black, 5 for white
       game.load('8/3p4/3K4/8/8/2n2k2/8/8 w - - 11 70');
-      expect(evaluateMobility(game, -1)).toBeCloseTo(11 * mobilityWeighting);
+      expect(evaluateMobility(game.moves(), swapTurn(game).moves(),
+          -1)).toBeCloseTo(11 * mobilityWeighting);
     });
 
     it('should calculate mobility for initial game', () => {
       game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-      expect(evaluateMobility(game, -1)).toBeCloseTo(0);
+      expect(evaluateMobility(game.moves(), swapTurn(game).moves(),
+          -1)).toBeCloseTo(0);
     });
 
     it('should evaluate mobility "somewhat" fast', () => {
@@ -170,7 +173,8 @@ describe('Chess engine', () => {
 
       let start = Date.now();
       for (let i = 0; i < 1000; i++) {
-        const score = evaluateMobility(game, -1);
+        const score = evaluateMobility(game.moves(), swapTurn(game).moves(),
+            -1);
         expect(score).toBeCloseTo(0.75);
       }
       const evaluationTime = (Date.now() - start) / 1000;
@@ -232,30 +236,36 @@ describe('Chess engine', () => {
 
     it('should evaluate center control for initial game', () => {
       game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-      expect(evaluateCenter(game, nrOfPieces)).toBeCloseTo(0);
+      expect(evaluateCenter(game.moves(), swapTurn(game).moves(),
+          nrOfPieces)).toBeCloseTo(0);
     });
 
     it('should see white as more in control in mid-game', () => {
       game.load(
           'r1b1kbnr/1pP2pp1/1p1p4/n3Pq1p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 0 17');
-      expect(evaluateCenter(game, nrOfPieces)).toBeLessThan(0);
+      expect(evaluateCenter(game.moves(), swapTurn(game).moves(),
+          nrOfPieces)).toBeLessThan(0);
     });
 
     it('should see white dominating the center', () => {
       game.load(
           'r1b1kbnr/1pPq1pp1/1p1P4/n6p/2P5/P1N2NP1/4B2P/R1BQK2R w KQkq - 1 18');
       // console.log('score:', evaluateCenter(game, getPieces(game)));
-      expect(evaluateCenter(game, nrOfPieces)).toBeLessThan(0);
+      expect(evaluateCenter(game.moves(), swapTurn(game).moves(),
+          nrOfPieces)).toBeLessThan(0);
     });
 
     it('should give less weight for endgame', () => {
       game.load('8/p2p4/4p1k1/1p6/4n1K1/8/8/8 w - - 0 48');
-      expect(evaluateCenter(game, 8)).toBeCloseTo(0);
+      expect(
+          evaluateCenter(game.moves(), swapTurn(game).moves(), 8)).toBeCloseTo(
+          0);
     });
 
     it('should recognize balanced center situation', () => {
       game.load('r1b2knr/pppp2pp/2n5/2b2B2/4PP2/2PP4/PP5P/RNB1QKNR b - - 0 10');
-      expect(evaluateCenter(game, nrOfPieces)).toBeLessThan(centerWeighting);
+      expect(evaluateCenter(game.moves(), swapTurn(game).moves(),
+          nrOfPieces)).toBeLessThan(centerWeighting);
     });
 
     it('should evaluate center control fast', () => {
@@ -263,7 +273,7 @@ describe('Chess engine', () => {
 
       let start = Date.now();
       for (let i = 0; i < 1000; i++) {
-        const score = evaluateCenter(game, 32);
+        const score = evaluateCenter(game.moves(), swapTurn(game).moves(), 32);
         expect(score).toBeLessThan(centerWeighting);
       }
       const evaluationTime = (Date.now() - start) / 1000;

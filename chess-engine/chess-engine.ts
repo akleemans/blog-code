@@ -74,13 +74,8 @@ const evaluateMaterial = (allPieces: ChessPiece[]): number => {
 };
 
 // Evaluate
-const evaluateMobility = (game: Chess, multiplier: number): number => {
-  let score = multiplier * mobilityWeighting * game.moves().length;
-
-  const modifiedGame = swapTurn(game);
-  score -= multiplier * mobilityWeighting * modifiedGame.moves().length;
-
-  return score;
+const evaluateMobility = (moves: RawMove[], enemyMoves: RawMove[], multiplier: number): number => {
+  return multiplier * mobilityWeighting * moves.length - multiplier * mobilityWeighting * enemyMoves.length;
 };
 
 const hasPawns = (colNr: number, color: ChessColor, cols: ChessPiece[][]): boolean => {
@@ -129,15 +124,12 @@ const calculateCenterScore = (moves: RawMove[]): number => {
   return score;
 };
 
-const evaluateCenter = (game: Chess, nrOfPieces: number): number => {
+const evaluateCenter = (moves: RawMove[], enemyMoves: RawMove[], nrOfPieces: number): number => {
   // Center control is more important in early and mid-game
   const openingWeighting = Math.max((nrOfPieces - 8) / 24, 0);
 
   // Calculate control with per square reciprocal piece value of attacker
-  let score = calculateCenterScore(game.moves());
-  // console.log('score:', score);
-  const modifiedGame = swapTurn(game);
-  score += calculateCenterScore(modifiedGame.moves());
+  let score = calculateCenterScore(moves) + calculateCenterScore(enemyMoves);
 
   return score * openingWeighting * centerWeighting;
 }
@@ -155,20 +147,19 @@ const evaluateBoard = (game: Chess, print: boolean = false): number => {
       return -multiplier * 200;
     }
   }
+  const moves = game.moves();
+  const enemyMoves = swapTurn(game).moves();
 
   let scores = {
     // 2. Material
     material: round(evaluateMaterial(allPieces)),
     // 3. Mobility (number of legal moves available)
-    mobility: round(evaluateMobility(game, multiplier)),
+    mobility: round(evaluateMobility(moves, enemyMoves, multiplier)),
     // 4. Pawn structure: doubled and isolated pawns
     pawns: round(evaluatePawns(game)),
     // 5. Center control, weighted by amount of pieces
-    center: round(evaluateCenter(game, allPieces.length)),
+    center: round(evaluateCenter(moves, enemyMoves, allPieces.length)),
   };
-  // TODO 6. King safety
-  // const blackKing = allPieces.filter(p => p.type === 'k');
-  // const whiteKing = allPieces.filter(p => p.type === 'w');
 
   const totalScore = round(Object.keys(scores).map(
     (k, i) => scores[k]).reduce(sum, 0));
