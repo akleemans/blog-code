@@ -18,7 +18,7 @@ The following criteria are used for evaluating a position:
 
 ## Idea
 
-Based on the ideas of [paper from Shannon](https://www.pi.infn.it/~carosi/chess/shannon.txt).
+Based on the ideas of [paper from Shannon](https://web.archive.org/web/20220530060138/https://www.pi.infn.it/~carosi/chess/shannon.txt).
 
 Formula used there:
 
