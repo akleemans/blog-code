@@ -179,4 +179,5 @@ var PhoneNumberCtrl = /** @class */ (function () {
     };
     return PhoneNumberCtrl;
 }());
-angular.module('PhoneNumberApp', []).controller('PhoneNumberCtrl', PhoneNumberCtrl);
+// Enable for live version
+// angular.module('PhoneNumberApp', []).controller('PhoneNumberCtrl', PhoneNumberCtrl);
